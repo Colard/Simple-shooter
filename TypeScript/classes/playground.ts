@@ -1,9 +1,13 @@
-import { ISize } from "../interfaces/object_view.js";
-import { Container } from "../abstract_classes/elements.js";
+import { IDraw, IContainer } from "../interfaces/drawing";
+import { ISize, IPosition } from "../interfaces/object_view.js";
 
 type Context = CanvasRenderingContext2D | null;
 
-export class Playground implements IContainer {
+export class Playground {
+  private frames : number = 0;
+  private isFPSMeterOn = false;
+  private fps = 0;
+
   private static instance : Playground;
 
   private context : CanvasRenderingContext2D | null = null;
@@ -28,7 +32,7 @@ export class Playground implements IContainer {
     return Playground.GetInstance().context;
   }
 
-  public GetWindowSize() : ISize | null{
+  public GetSize() : ISize | null {
     const instance = Playground.GetInstance();
 
     if(!instance.width || !instance.height) {
@@ -63,17 +67,42 @@ export class Playground implements IContainer {
     
     context.fillStyle = "white";
     context.fillRect(0, 0, instance.width, instance.height);
+  }
 
-    instance.elementList.forEach((value: IDraw) => value.Draw(context));
+  private Update(context : CanvasRenderingContext2D) {
+    const instance = Playground.GetInstance();
+    this.Draw(context);
+    instance.elementList.forEach((value: IDraw) => value.Update(context));
+
+    if(!this.isFPSMeterOn) return;
+
+    context.fillStyle = "black";
+    context.font = "bold 20px Arial";
+    context.fillText(instance.fps + " FPS", 10, 20);
   }
 
   public Run() {
     const instance = Playground.GetInstance();
     const animateFunc = instance.Run;
 
+    if(instance.isFPSMeterOn) instance.frames++;
+
     if(!instance.context) return;
 
-    instance.Draw(instance.context);
+    instance.Update(instance.context);
     window.requestAnimationFrame(animateFunc);
+  }
+
+  public OnFPSMeter() {
+    const instance = Playground.GetInstance();
+    const context = Playground.GetInstance().context;
+    instance.isFPSMeterOn = true;
+    const fps = 0;
+
+    setInterval(() => {
+      instance.fps = instance.frames;
+      instance.frames = 0;
+    }, 1000)
+
   }
 }

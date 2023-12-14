@@ -1,5 +1,8 @@
 export class Playground {
     constructor() {
+        this.frames = 0;
+        this.isFPSMeterOn = false;
+        this.fps = 0;
         this.context = null;
         this.elementList = [];
         this.width = null;
@@ -14,7 +17,7 @@ export class Playground {
     GetContext() {
         return Playground.GetInstance().context;
     }
-    GetWindowSize() {
+    GetSize() {
         const instance = Playground.GetInstance();
         if (!instance.width || !instance.height) {
             return null;
@@ -41,14 +44,35 @@ export class Playground {
             return null;
         context.fillStyle = "white";
         context.fillRect(0, 0, instance.width, instance.height);
-        instance.elementList.forEach((value) => value.Draw(context));
+    }
+    Update(context) {
+        const instance = Playground.GetInstance();
+        this.Draw(context);
+        instance.elementList.forEach((value) => value.Update(context));
+        if (!this.isFPSMeterOn)
+            return;
+        context.fillStyle = "black";
+        context.font = "bold 20px Arial";
+        context.fillText(instance.fps + " FPS", 10, 20);
     }
     Run() {
         const instance = Playground.GetInstance();
         const animateFunc = instance.Run;
+        if (instance.isFPSMeterOn)
+            instance.frames++;
         if (!instance.context)
             return;
-        instance.Draw(instance.context);
+        instance.Update(instance.context);
         window.requestAnimationFrame(animateFunc);
+    }
+    OnFPSMeter() {
+        const instance = Playground.GetInstance();
+        const context = Playground.GetInstance().context;
+        instance.isFPSMeterOn = true;
+        const fps = 0;
+        setInterval(() => {
+            instance.fps = instance.frames;
+            instance.frames = 0;
+        }, 1000);
     }
 }
