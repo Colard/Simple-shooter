@@ -1,8 +1,27 @@
-import { Playground } from "./playground.js";
+import { Player } from "./classes/player.js";
+import { Playground } from "./classes/playground.js";
 
-const playground = Playground.getInstance();
-let canvas = <HTMLCanvasElement>document.getElementById("playground");
+Run();
 
-if(canvas) {
-  playground.Create(canvas);
-}
+
+function Run() {
+  const playground = Playground.GetInstance();
+  
+  const canvas = <HTMLCanvasElement>document.getElementById("playground");
+
+  if(!canvas) return;
+
+  const context = playground.CreateContext(canvas);
+
+  if(!context) return;
+
+  const windowSize = playground.GetWindowSize();
+
+  if(!windowSize) return;
+
+  const player = new Player(windowSize);
+  playground.AddElement(player);
+
+  playground.Run();
+};
+
