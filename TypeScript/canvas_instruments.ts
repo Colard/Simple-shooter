@@ -1,9 +1,9 @@
-import { RotatableObject } from "./abstract_classes/elements";
+import { RotatablePolygon } from "./abstract_classes/elements";
 import { IPosition } from "./interfaces/object_view";
 
 type ContextedFunction = (c : CanvasRenderingContext2D) => void;
 
-export function AlignRotateDirection(DrawView : ContextedFunction, obj : RotatableObject, context : CanvasRenderingContext2D) {
+export function AlignRotateDirection(DrawView : ContextedFunction, obj : RotatablePolygon, context : CanvasRenderingContext2D) {
   
   const size = obj.GetSize();
   const position = obj.GetAbsolutePosition();

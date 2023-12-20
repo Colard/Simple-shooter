@@ -1,25 +1,50 @@
-import { RotatableObject } from "../abstract_classes/elements.js";
-import { AlignRotateDirection } from "../canvas_instruments.js";
-export class Player extends RotatableObject {
+import { RotatablePolygon } from "../abstract_classes/elements.js";
+import { PolygonHandler } from "../logic_classes/PolygonArray.js";
+export class Player extends RotatablePolygon {
     constructor(x, y) {
-        super(x, y);
-        this.width = this.height = 100;
+        super(x, y, []);
+        this.step = 10;
+        this.moveEvent = () => { };
+        this.createForm();
+        this.reculcPolygon();
     }
     Draw(context) {
         super.Draw(context);
         context.fillStyle = "red";
-        context.fillRect(this.absoluteX, this.absoluteY, this.width, this.height);
-        context.fillStyle = "orange";
-        context.fillRect(this.absoluteX + this.width / 2, this.absoluteY, 10, 40);
+        PolygonHandler.DrawFilledPolygon(context, this);
     }
     Update(context) {
-        const BindedDraw = this.Draw.bind(this);
-        AlignRotateDirection(BindedDraw, this, context);
+        this.moveEvent();
+        this.Draw(context);
     }
     SetContainer(container) {
+        super.SetContainer(container);
         const containerSize = container.GetSize();
-        const containerPosition = container.GetAbsolutePosition();
-        this.absoluteX = containerPosition.x + (containerSize.width - this.width) / 2;
-        this.absoluteY = containerPosition.y + (containerSize.height - this.height) / 2;
+        this.relativeX = (containerSize.width - this.width) / 2;
+        this.relativeY = (containerSize.height - this.height) / 2;
+    }
+    MoveUp() {
+        this.relativeY -= this.step;
+    }
+    MoveDown() {
+        this.relativeY += this.step;
+    }
+    MoveRight() {
+        this.relativeX -= this.step;
+    }
+    MoveLeft() {
+        this.relativeX += this.step;
+    }
+    createForm() {
+        this.transformPolygonCoordinatesFromArray([
+            [0, 0],
+            [15, 70],
+            [40, 70],
+            [40, 100],
+            [60, 100],
+            [60, 70],
+            [85, 70],
+            [100, 0],
+        ]);
     }
 }

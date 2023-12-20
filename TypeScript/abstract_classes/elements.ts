@@ -7,10 +7,6 @@ export abstract class ViewObject implements IDraw {
 
   protected relativeY : number;
 
-  protected absoluteX : number;
-
-  protected absoluteY : number;
-
   protected width : number;
 
   protected height : number;
@@ -18,8 +14,8 @@ export abstract class ViewObject implements IDraw {
   protected container : IContainer | null = null; 
 
   constructor (x : number  = 0, y: number  = 0, w: number = 0, h: number = 0) {
-    this.absoluteX = this.relativeX = x;
-    this.absoluteY = this.relativeY = y;
+    this.relativeX = x;
+    this.relativeY = y;
     this.width = w;
     this.height = h;
   }
@@ -33,10 +29,6 @@ export abstract class ViewObject implements IDraw {
 
   public SetContainer(container : IContainer) {
     this.container = container;
-    const containerPosition = this.container.GetAbsolutePosition();
-
-    this.absoluteX = this.relativeX + containerPosition.x;
-    this.absoluteY = this.relativeY + containerPosition.y;
   }
 
   public GetSize() : ISize {
@@ -47,19 +39,37 @@ export abstract class ViewObject implements IDraw {
   }
 
   public GetAbsolutePosition() : IPosition {
+    let container = this.container;
+    
+    if(!container) {
+      return {
+        x: this.relativeX, 
+        y: this.relativeY
+      }
+    } 
+    
+    const containerPosition = container.GetAbsolutePosition();
+
     return {
-      x: this.absoluteX,
-      y: this.absoluteY
+      x: this.relativeX + containerPosition.x,
+      y: this.relativeY + containerPosition.y
     }
   }
 
   public GetAbsoluteCenter() : IPosition {
+    let absolute = this.GetAbsolutePosition();
     return {
-      x: this.absoluteX + this.width/2,
-      y: this.absoluteY + this.height/2
+      x: absolute.x + this.width/2,
+      y: absolute.y + this.height/2
     }
   }
 
+  public GetRelativeCenter() : IPosition {
+    return {
+      x: this.width/2,
+      y: this.height/2
+    }
+  }
 
   public GetRelativePosition() : IPosition {
     return {
@@ -70,16 +80,111 @@ export abstract class ViewObject implements IDraw {
 
 }
 
-export class RotatableObject extends ViewObject implements IRotatable{
-  protected angle : number = 0;
+export class PolygonObject extends ViewObject {
+  protected polygonFormCoordinates : IPosition[];
+  protected polygonCoordinates : IPosition[];
 
-  GetAngle(): number {
+  constructor(x : number = 0, y : number = 0, polygonFormCoordinates : [number, number][]) {
+    super(x, y);
+
+    this.polygonFormCoordinates = [];
+    this.transformPolygonCoordinatesFromArray(polygonFormCoordinates);
+
+    this.polygonCoordinates = [];
+
+    this.reculcPolygon();
+  }
+
+  protected reculcPolygon() {
+    const pointCount = this.polygonFormCoordinates.length;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    if(pointCount < 1)  return; 
+    
+    this.polygonCoordinates = [];
+
+    for(let i = 0; i < pointCount; i++) {
+      maxX = (maxX < this.polygonFormCoordinates[i].x) ? this.polygonFormCoordinates[i].x : maxX;
+      maxY = (maxY < this.polygonFormCoordinates[i].y) ? this.polygonFormCoordinates[i].y : maxY;
+
+      this.polygonCoordinates[i] = {
+        x: this.relativeX + this.polygonFormCoordinates[i].x,
+        y: this.relativeY + this.polygonFormCoordinates[i].y
+      } 
+    }
+    
+    this.width = maxX - this.relativeX;
+    this.height = maxY - this.relativeY;
+  }
+
+  public GetPolygonForm() {
+    return this.polygonFormCoordinates;
+  }
+
+  protected transformPolygonCoordinatesFromArray(arr : [number, number][]) {
+    this.polygonFormCoordinates = arr.map((value) => {
+      return {x: value[0], y: value[1] } as IPosition
+    })
+
+    this.normilizePolygonForm();
+  }
+
+  protected normilizePolygonForm() {
+    let polygonForm = this.polygonFormCoordinates;
+
+    if(polygonForm.length == 0) return;
+
+    const height = Math.max(...polygonForm.map(el => el.y));
+    
+    this.polygonFormCoordinates = polygonForm.map(el => {
+      return {
+        x: el.x, 
+        y: height - el.y
+      } as IPosition});
+  }
+}
+
+export class RotatablePolygon extends PolygonObject implements IRotatable{
+  protected angle : number = 0;
+  protected polygonRotatedFormCoordinates : IPosition[];
+
+  constructor(x : number = 0, y : number = 0, polygonFormCoordinates : [number, number][]) {
+    super(x, y, polygonFormCoordinates);
+    this.polygonRotatedFormCoordinates = this.polygonFormCoordinates.slice(0);
+  }
+
+  public GetAngle(): number {
     return this.angle;
   }
 
-  SetAngle(angle : number): void {
+  public SetAngle(angle : number): void {
     this.angle = angle;
+    this.rotatePolygon();
   }
+
+  public GetPolygonForm() {
+    return this.polygonRotatedFormCoordinates;
+  }
+
+  public Draw(context: CanvasRenderingContext2D): void {
+    super.Draw(context);
+  }
+  
+  protected rotatePolygon() : IPosition[] {
+    const angleInRadians = ((this.angle+90) * Math.PI) / 180;
+    const polygonCenter = this.GetRelativeCenter();
+
+    const rotatedPolygon = this.polygonFormCoordinates.map(point => {
+        const x = polygonCenter.x + (point.x - polygonCenter.x) * Math.cos(angleInRadians) - (point.y - polygonCenter.y) * Math.sin(angleInRadians);
+        const y = polygonCenter.y + (point.x - polygonCenter.x) * Math.sin(angleInRadians) + (point.y - polygonCenter.y) * Math.cos(angleInRadians);
+        return {x: x, y: y} as IPosition;
+    });
+
+    this.polygonRotatedFormCoordinates = rotatedPolygon;
+    
+    return rotatedPolygon;
+  }   
 }
 
 export class Container extends ViewObject implements IContainer {
@@ -116,6 +221,8 @@ export class Container extends ViewObject implements IContainer {
     if(!this.background || !this.width || !this.height) return;
 
     context.fillStyle = this.background;
-    context.fillRect(this.absoluteX, this.absoluteY, this.width, this.height);
+
+    let position = this.GetAbsolutePosition();
+    context.fillRect(position.x, position.y, this.width, this.height);
   }
 }
