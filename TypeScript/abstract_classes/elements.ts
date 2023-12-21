@@ -122,6 +122,23 @@ export class PolygonObject extends ViewObject {
     return this.polygonFormCoordinates;
   }
 
+  public GetAbsolutePolygonForm() {
+    let absolutePosition = this.GetAbsolutePosition();
+
+    return this.polygonFormCoordinates.map((el : IPosition)=> {
+      let absoluteX = absolutePosition.x + el.x;
+      let absoluteY = absolutePosition .y+ el.y;
+      return {
+        x: absoluteX, 
+        y: absoluteY
+      } as IPosition;
+    });
+  }
+
+  public GetPolygonAbsoluteCoordinates() {
+    return this.polygonFormCoordinates;
+  }
+
   protected transformPolygonCoordinatesFromArray(arr : [number, number][]) {
     this.polygonFormCoordinates = arr.map((value) => {
       return {x: value[0], y: value[1] } as IPosition
@@ -165,6 +182,19 @@ export class RotatablePolygon extends PolygonObject implements IRotatable{
 
   public GetPolygonForm() {
     return this.polygonRotatedFormCoordinates;
+  }
+
+  public GetAbsolutePolygonForm() {
+    let absolutePosition = this.GetAbsolutePosition();
+
+    return this.polygonRotatedFormCoordinates.map((el : IPosition)=> {
+      let absoluteX = absolutePosition.x + el.x;
+      let absoluteY = absolutePosition .y+ el.y;
+      return {
+        x: absoluteX, 
+        y: absoluteY
+      } as IPosition;
+    });
   }
 
   public Draw(context: CanvasRenderingContext2D): void {
@@ -215,6 +245,16 @@ export class Container extends ViewObject implements IContainer {
 
   public SetBackground(color : string) {
     this.background = color;
+  }
+
+  public ConverToPoligon() {
+    return new PolygonObject(this.relativeX, this.relativeY, [
+      [0, 0],
+      [0, this.height],
+      [this.width, this.height],
+      [this.width, 0],
+    ]
+      );
   }
 
   private drawBackground(context : CanvasRenderingContext2D) {

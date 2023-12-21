@@ -10,6 +10,7 @@ export class Player extends RotatablePolygon {
       super(x, y, []);
 
       this.createForm();
+      this.polygonFormCoordinates = PolygonHandler.PolygonDecomp(this.polygonFormCoordinates)[0];
       this.reculcPolygon();
   }
 

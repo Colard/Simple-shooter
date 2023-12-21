@@ -1,6 +1,7 @@
 import { Player } from "./classes/player.js";
 import { Playground } from "./classes/playground.js";
 import { Container } from "./abstract_classes/elements.js";
+import { PolygonHandler } from "./logic_classes/PolygonArray.js";
 Run();
 
 
@@ -72,6 +73,8 @@ function Run() {
     if (keysPressed["KeyA"]) {
       player.MoveRight();
     }
+
+    //if(PolygonHandler.DoPolygonsIntersect(player, container.ConverToPoligon())) console.log("!_-")
   }
 
   player.moveEvent = handleKeys;

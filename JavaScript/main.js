@@ -49,6 +49,7 @@ function Run() {
         if (keysPressed["KeyA"]) {
             player.MoveRight();
         }
+        //if(PolygonHandler.DoPolygonsIntersect(player, container.ConverToPoligon())) console.log("!_-")
     }
     player.moveEvent = handleKeys;
     playground.Run();
